@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Filetool
+GenericName=Rename and Reshape Files
+Comment=Rename files in bulk and compress, resize or convert images
+Exec=/usr/bin/filetool-gui
+Icon=system-file-manager
+Terminal=false
+Categories=Utility;FileTools;
+Keywords=rename;batch;filename;image;resize;convert;compress;webp;
+StartupNotify=true

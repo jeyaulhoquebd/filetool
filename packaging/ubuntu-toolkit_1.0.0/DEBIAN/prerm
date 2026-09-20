@@ -1,0 +1,42 @@
+#!/bin/sh
+# prerm — part of ubuntu-toolkit.
+#
+# Undo the postinst's systemctl --global enable, so the units stop being
+# started for users who log in after this point.
+set -e
+
+case "$1" in
+remove)
+    # This removes only the symlinks under /etc/systemd/user. It cannot stop an
+    # instance already running in somebody's session, and cannot even tell
+    # whether one is: there is no user bus here to ask. So it says so rather
+    # than leaving that person to wonder why a watcher is still moving files.
+    for unit in bing-wallpaper.timer download-organizer.service; do
+        systemctl --global disable "$unit" >/dev/null 2>&1 || true
+    done
+
+    cat <<'MESSAGE'
+
+ubuntu-toolkit: the background jobs will not start for future logins.
+
+If you are logged in now, anything already running keeps going until you log
+out — a package script cannot reach into your session to stop it. To stop them
+here instead:
+
+    systemctl --user disable --now download-organizer.service
+    systemctl --user stop bing-wallpaper.timer
+
+Your own files are untouched by this; see the note at the end of the removal
+if you also want the settings and undo history gone.
+MESSAGE
+    ;;
+upgrade | deconfigure | failed-upgrade)
+    # An upgrade must not disable anything: the units are about to be replaced.
+    ;;
+*)
+    echo "prerm called with unknown argument '$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

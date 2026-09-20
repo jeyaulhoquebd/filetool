@@ -1,0 +1,88 @@
+#!/bin/sh
+# postinst — part of ubuntu-toolkit.
+#
+# Two jobs: make the user units start for every user, and tell whoever is
+# reading the terminal how to start them in the session they are in right now.
+set -e
+
+UNITS=/usr/lib/systemd/user
+
+case "$1" in
+configure)
+    # systemctl --global enable only writes symlinks under
+    # /etc/systemd/user/<target>.wants/. It does not talk to a running
+    # per-user systemd instance, and that is exactly what makes it usable
+    # here: a postinst runs as root with no login session and no session bus,
+    # so "systemctl --user enable" would fail for every user on the machine.
+    # (Checked: the operation is pure filesystem work and succeeds with no
+    # session present.)
+    #
+    # Be clear about what "global" means — it is not a no-op. Every user who
+    # logs in from now on gets these units started in their own session. The
+    # alternative, leaving them off and asking each user to enable them by
+    # hand, is what the prerm/postrm undo.
+    if command -v systemctl >/dev/null 2>&1 && [ -d "$UNITS" ]; then
+        # The timer pulls bing-wallpaper.service in on its own, so the service
+        # is deliberately not enabled: it has no [Install] section, and
+        # enabling both would add a second, redundant trigger at login.
+        if [ -e "$UNITS/bing-wallpaper.timer" ]; then
+            systemctl --global enable bing-wallpaper.timer >/dev/null 2>&1 \
+                || echo "ubuntu-toolkit: could not globally enable bing-wallpaper.timer" >&2
+        fi
+
+        # The watcher is WantedBy=default.target: this is the line that makes
+        # it run once per user at login.
+        if [ -e "$UNITS/download-organizer.service" ]; then
+            systemctl --global enable download-organizer.service >/dev/null 2>&1 \
+                || echo "ubuntu-toolkit: could not globally enable download-organizer.service" >&2
+        fi
+    fi
+
+    # Deliberately not run: "systemctl --user daemon-reload" and
+    # "systemctl --user enable --now". There is no user session here to run
+    # them in, and guessing at one would be worse than saying so below.
+    cat <<'MESSAGE'
+
+ubuntu-toolkit is installed. The commands are:
+
+    bulk-rename          rename many files at once, safely
+    filetool             rename and reshape files (command line)
+    filetool-gui         rename and reshape files (window)
+    find-duplicates      find duplicate files across folders
+    image-tool           compress, resize and convert images
+    download-organizer   sort loose files into subfolders by type
+    bing-wallpaper       today's Bing photo as the desktop wallpaper
+
+Two background jobs are installed. They are enabled system-wide, so every user
+gets their own copy at login, but nothing has been started for you yet — a
+package script cannot reach into your session. To start them in this one:
+
+    systemctl --user daemon-reload
+    systemctl --user start bing-wallpaper.timer
+    systemctl --user enable --now download-organizer.service
+
+The last line starts a watcher on your ~/Downloads folder. It is the one to
+leave out if you would rather it did not run for every account on this
+machine, in which case turn the global enable back off:
+
+    sudo systemctl --global disable download-organizer.service
+
+Neither job has been started, so nothing is running until you say so. Check on
+them once started with:
+
+    systemctl --user list-timers bing-wallpaper.timer
+    journalctl --user -u bing-wallpaper -n 50
+    journalctl --user -u download-organizer -n 50
+
+Full notes, including how to change the refresh time and the watched folder:
+/usr/share/doc/ubuntu-toolkit/README.md
+MESSAGE
+    ;;
+abort-upgrade | abort-remove | abort-deconfigure) ;;
+*)
+    echo "postinst called with unknown argument '$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

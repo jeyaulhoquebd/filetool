@@ -1,0 +1,13 @@
+# The maintainer scripts call "systemctl --global enable|disable" to turn the
+# packaged *user* units on and off for every user on the machine.
+#
+# This is the same thing debhelper's dh_installsystemduser generates; it is
+# overridden here rather than avoided because it is the only mechanism that
+# exists. --global writes symlinks under /etc/systemd/user/<target>.wants/ and
+# needs neither a running user session nor a session bus, which is what makes
+# it callable from a root postinst at all. A plain "systemctl --user enable"
+# would fail for every user, since there is no session for it to talk to.
+#
+# The units are user units, so they are deliberately not registered with the
+# system-wide systemd: a per-user instance is the point.
+ubuntu-toolkit: maintainer-script-calls-systemctl

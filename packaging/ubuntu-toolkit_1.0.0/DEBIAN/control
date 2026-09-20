@@ -1,0 +1,37 @@
+Package: ubuntu-toolkit
+Version: 1.0.0
+Architecture: all
+Section: utils
+Priority: optional
+Maintainer: Jaber <jeyaulhoque2025@gmail.com>
+Depends: python3, python3-watchdog
+Recommends: python3-pil, python3-tqdm, python3-send2trash, python3-pyqt6, libglib2.0-bin
+Suggests: libnotify-bin
+Installed-Size: 508
+Description: seven file-management tools with two systemd user services
+ ubuntu-toolkit collects a set of small Python 3 tools for working with
+ files in bulk, along with the background jobs and desktop entry that make
+ two of them useful without being asked.
+ .
+ Renaming: bulk-rename and filetool rename many files at once -- prefixes,
+ suffixes, find and replace, renumbering, case changes -- and either one can
+ undo a run from a shared history log. filetool-gui drives the same engine
+ from a window, with a preview table before anything is written.
+ .
+ Images: filetool image and image-tool compress, resize and convert images
+ without touching the originals.
+ .
+ Duplicates: find-duplicates hashes files across several folders and can
+ send the copies it finds to the Trash.
+ .
+ Downloads: download-organizer sorts loose files in the watched folder into
+ subfolders by type, as a systemd user service that waits for a new file to
+ stop growing before moving it.
+ .
+ Wallpaper: bing-wallpaper fetches the day's Bing photo and sets it as the
+ GNOME desktop background, as a systemd user service on a daily timer.
+ .
+ Everything is pure Python 3 and the package contains no compiled code.
+ .
+ filetool-gui needs a Qt binding, either PySide6 or PyQt6; the latter is
+ recommended because Ubuntu 24.04 ships no PySide6.

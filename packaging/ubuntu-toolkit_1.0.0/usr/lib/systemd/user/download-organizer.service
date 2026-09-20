@@ -1,0 +1,44 @@
+[Unit]
+Description=Download Organizer (sort new downloads into subfolders)
+Documentation=file:/usr/share/doc/ubuntu-toolkit/README.md
+After=default.target
+
+# If it keeps crashing (a broken config file, for example), give up after
+# five tries in five minutes instead of restarting in a tight loop forever.
+# Check why with:  journalctl --user -u download-organizer -n 50
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+
+# %h is expanded by systemd to the home directory of whoever is running this,
+# which is what makes one packaged unit work for every user: each session gets
+# its own instance watching its own Downloads folder.
+#
+# --watch needs -y because a service has no terminal to answer the
+# "Continue? [y/N]" prompt. To watch a different folder, or to add flags,
+# override rather than edit this file:
+#   systemctl --user edit download-organizer.service
+ExecStart=/usr/bin/download-organizer --watch %h/Downloads -y
+
+# Without this, Python buffers its output and journalctl shows nothing until
+# the buffer fills up. With it, "Moved: ..." lines appear as they happen.
+Environment=PYTHONUNBUFFERED=1
+
+Restart=on-failure
+RestartSec=10
+
+# Makes the service easy to pick out of the journal.
+SyslogIdentifier=download-organizer
+StandardOutput=journal
+StandardError=journal
+
+# Light hardening. Deliberately NOT using ProtectHome or ProtectSystem: the
+# entire job of this service is to read and write files in the home folder,
+# so those options would break it.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

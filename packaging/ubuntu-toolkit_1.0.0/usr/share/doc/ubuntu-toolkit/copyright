@@ -1,0 +1,39 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ubuntu-toolkit
+Source: local source tree, packaged in packaging/
+
+Files: *
+Copyright: 2026 Jaber <jeyaulhoque2025@gmail.com>
+License: UNSPECIFIED
+ No licence has been granted for this work yet. The source files carry no
+ licence header, and the source tree contains no LICENSE or COPYING file, so
+ there is nothing to restate here. Until a licence is chosen, no rights are
+ granted to anyone who receives a copy beyond what copyright law allows.
+ .
+ THIS IS THE ONE THING TO FIX BEFORE DISTRIBUTING THIS PACKAGE. Replace this
+ stanza with the licence you intend. For the two commonest choices the full
+ text is already on every Debian system under /usr/share/common-licenses, so
+ naming it is enough. For example, for GPL-3-or-later, replace the four lines
+ above with:
+ .
+   Files: *
+   Copyright: 2026 Jaber <jeyaulhoque2025@gmail.com>
+   License: GPL-3+
+ .
+ and add a paragraph below it containing:
+ .
+   License: GPL-3+
+   This program is free software: you can redistribute it and/or modify it
+   under the terms of the GNU General Public License as published by the
+   Free Software Foundation, either version 3 of the License, or (at your
+   option) any later version.
+   .
+   This program is distributed in the hope that it will be useful, but
+   WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General
+   Public License for more details.
+   .
+   On Debian systems the full text of the GNU General Public License version 3
+   can be found in /usr/share/common-licenses/GPL-3.
+ .
+ Then run: lintian --info ubuntu-toolkit_1.0.0_all.deb

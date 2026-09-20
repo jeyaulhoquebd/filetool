@@ -1,0 +1,48 @@
+#!/bin/sh
+# postrm — part of ubuntu-toolkit.
+#
+# Belt and braces. prerm already disabled the units on remove; this repeats it
+# because postrm also runs when an install fails part way through and prerm
+# never got the chance. It deliberately touches nothing in anybody's home
+# directory.
+set -e
+
+case "$1" in
+remove | purge)
+    # Idempotent: disabling an already-disabled unit is not an error.
+    for unit in bing-wallpaper.timer download-organizer.service; do
+        systemctl --global disable "$unit" >/dev/null 2>&1 || true
+    done
+
+    if [ "$1" = purge ]; then
+        # Nothing to purge. The package ships no state of its own: every file
+        # the tools write is created at runtime under the user's home, and
+        # deleting those from a root script would be both surprising and
+        # destructive — the two history logs are what --undo reads.
+        cat <<'MESSAGE'
+
+ubuntu-toolkit: your own files were left alone, including on purge.
+
+This package keeps no data of its own, so there is nothing for it to purge.
+What the tools wrote under your home directory is still there:
+
+    ~/.config/download-organizer/config.json     download-organizer settings
+    ~/.local/state/download-organizer/           its undo history
+    ~/.local/state/bulk-rename/history.log       undo history shared by
+                                                 bulk-rename and filetool
+    ~/Pictures/Wallpapers/                       photos fetched by
+                                                 bing-wallpaper
+
+Delete them by hand if you want them gone. The two history files are what
+"--undo" reads, so removing them means past runs can no longer be reversed.
+MESSAGE
+    fi
+    ;;
+upgrade | failed-upgrade | abort-install | abort-upgrade | disappear) ;;
+*)
+    echo "postrm called with unknown argument '$1'" >&2
+    exit 1
+    ;;
+esac
+
+exit 0

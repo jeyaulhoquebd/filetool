@@ -1,0 +1,14 @@
+#!/bin/sh
+# filetool-gui — rename and reshape files (window)
+#
+# Part of ubuntu-toolkit. The implementation is installed as
+# /usr/lib/ubuntu-toolkit/filetool_gui.py; this launcher exists so that the module
+# directory itself stays off the default Python search path, where its
+# generic names (filetool, image_tool) could collide with anything else.
+#
+# PYTHONPATH is set in addition to relying on the script's own directory
+# being sys.path[0], because PYTHONSAFEPATH=1 or "python3 -P" removes that
+# directory again, and filetool_gui's "import filetool" would then fail.
+PYTHONPATH="/usr/lib/ubuntu-toolkit${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH
+exec /usr/bin/python3 /usr/lib/ubuntu-toolkit/filetool_gui.py "$@"
