@@ -1,0 +1,34 @@
+[Unit]
+Description=Daily Bing wallpaper refresh (and shortly after login)
+
+[Timer]
+# Bing swaps the homepage photo at midnight US Pacific, which is early
+# afternoon in this machine's timezone (Asia/Dhaka, +06): around 13:00 in
+# summer and 14:00 in winter. Running at 16:20 leaves a couple of hours of
+# margin, so the image fetched is genuinely the new one for the day rather
+# than yesterday's still-current photo.
+#
+# If you change --market, this time no longer lines up with that edition's
+# rollover, and you may want to move it.
+OnCalendar=*-*-* 16:20:00
+
+# Also run two minutes after every login. OnStartupSec is counted from when
+# the timer itself starts, which for a user timer is when you log in — this is
+# the line that covers a machine that was switched off at 16:20.
+OnStartupSec=2min
+
+# ...and this covers a machine that was merely asleep, or a session where the
+# timer never got to fire at 16:20: systemd records when the job last ran and
+# starts it right away on the next activation, instead of silently skipping
+# that day.
+Persistent=true
+
+Unit=bing-wallpaper.service
+
+# Running more than once a day is cheap — the script skips the download when
+# today's image is already saved — so if you would rather not depend on the
+# rollover happening before 16:20, add a second daily time:
+# OnCalendar=*-*-* 20:00:00
+
+[Install]
+WantedBy=timers.target

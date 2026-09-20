@@ -1,0 +1,65 @@
+[Unit]
+Description=Today's Bing photo as the desktop wallpaper
+Documentation=file:/home/j/deepseek-claude/wallpaper_changer.py
+
+# Best-effort ordering only. In a *user* manager network-online.target is
+# usually not wired to anything (check it yourself with:
+#   systemctl --user is-active network-online.target
+# on this machine it answers "inactive"), so on most desktops this line
+# changes nothing. It is kept because it is free and helps on setups where
+# the target is actually pulled in. The real answer to "the internet is not
+# up yet" is Restart= below, not this.
+Wants=network-online.target
+After=network-online.target
+
+# gsettings talks to the running GNOME session, and the wallpaper is only
+# visible once that session exists, so do not race the desktop at login.
+# graphical-session.target is active on this machine.
+After=graphical-session.target
+
+# Six tries at 45s (roughly four minutes) is long enough for a slow login and
+# short enough not to spin. After that the unit is left "failed" and waits for
+# the next login or the daily timer, rather than hammering a network that is
+# not coming back. Clear a failed state early with:
+#   systemctl --user reset-failed bing-wallpaper.service
+#
+# These two belong in [Unit], not [Service] — systemd reports
+# "Unknown key 'StartLimitIntervalSec' in section [Service], ignoring" and
+# silently keeps the 10 second default, which is shorter than RestartSec and
+# so means the burst limit never trips and the retries never stop.
+# StartLimitIntervalSec must also be at least StartLimitBurst * RestartSec,
+# or the unit gives up mid-count.
+StartLimitIntervalSec=600
+StartLimitBurst=6
+
+[Service]
+Type=oneshot
+
+# The script exits 0 when it is finished and 1 when the network, Bing, or
+# gsettings let it down. Retrying the failure is what covers logging in
+# before Wi-Fi is up: systemd tries again every 45 seconds, up to the start
+# limit in [Unit] above.
+ExecStart=/usr/bin/python3 /home/j/deepseek-claude/wallpaper_changer.py
+Restart=on-failure
+RestartSec=45
+
+# The script prints a line per action, and stderr warnings must not overtake
+# the stdout lines they belong to in the journal. Without this, Python buffers
+# stdout when it is not a terminal and the ordering comes out scrambled.
+Environment=PYTHONUNBUFFERED=1
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=bing-wallpaper
+
+# The only thing this script does is read the network and write one file in
+# your home folder, so ProtectHome/ProtectSystem would break it. These two are
+# safe and cheap.
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Deliberately no [Install] section: the timer is what gets enabled
+# (systemctl --user enable bing-wallpaper.timer), and it pulls this service in
+# on its own. Enabling the service as well would add a second, redundant
+# trigger at login. Manual runs still work:
+#   systemctl --user start bing-wallpaper.service
